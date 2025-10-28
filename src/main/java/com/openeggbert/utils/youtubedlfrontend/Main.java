@@ -46,7 +46,7 @@ public class Main {
 
         if (args.length < 1) {
             //System.err.println("At least one argument is expected, but the count of arguments is: " + args.length + ".");
-            String argsS = "/rv/blupi/archivebox --video_ 5rGd2VQz3mo --always-generate-metadata 1"
+            String argsS = "/rv/big/foreign-blupi-videos-on-youtube --video_ 5rGd2VQz3mo --always-generate-metadata 1"
                     + " --always-generate-html-files 1 --videos-per-row 4 --thumbnail-links-to-youtube 0"
                     + " --thumbnail-as-base64 1"
                     + " --channel_ UCqBpgfXap7cZOYkAC34u8Lg ";
@@ -92,12 +92,12 @@ public class Main {
         System.out.println("[Warning] Snapshots without videos:");
         YoutubeVideo.missingYoutubeVideos.forEach(s -> System.out.println(s));
         System.out.println("Total duration: " + ((int) ((((double) YoutubeVideo.totalDurationInMilliseconds) / 1000d / 60d / 60d))) + " hours");
-        youtubeVideos.stream().sorted((YoutubeVideo o1, YoutubeVideo o2) -> Long.valueOf(o1.getVideoDurationInMilliseconds()).compareTo(o2.getVideoDurationInMilliseconds()))
+        youtubeVideos.stream().sorted((YoutubeVideo o1, YoutubeVideo o2) -> Long.valueOf(o1.getVideoDurationInMilliseconds()).compareTo(Long.valueOf(o2.getVideoDurationInMilliseconds())))
                 .forEach(y -> {
                     System.out.println(y.getVideoDurationInMinutes() + " = minutes \t" + "https://youtube.com/watch?v=" + y.getId() + "\t" + y.getTitle());
                 });
         System.out.println("\n\n\n\n");
-        youtubeVideos.stream().sorted((YoutubeVideo o1, YoutubeVideo o2) -> Long.valueOf(o1.getVideoFileSizeInBytes()).compareTo(o2.getVideoFileSizeInBytes()))
+        youtubeVideos.stream().sorted((YoutubeVideo o1, YoutubeVideo o2) -> Long.valueOf(o1.getVideoFileSizeInBytes()).compareTo(Long.valueOf(o2.getVideoFileSizeInBytes())))
                 .forEach(y -> {
                     System.out.println(y.getVideoFileSizeInMegaBytes() + " MB \t" + "https://youtube.com/watch?v=" + y.getId() + "\t" + y.getTitle());
                 });
@@ -174,7 +174,7 @@ public class Main {
                                 //bytes = Utils.resizeImage(bais, 125, (int) (9d / 16d * 125d), "webp");
                             }
 
-                            String bytesS = "data:image/jpg;base64, " + com.robertvokac.powerframework.io.bit.base64.Base64Coder.encode(bytes);
+                            String bytesS = "data:image/jpg;base64, " + com.openeggbert.powerframework.io.bit.base64.Base64Coder.encode(bytes);
                             oneChannelStringBuilder.append(bytesS);
                         } catch (IOException ex) {
                             throw new YoutubedlFrontendException(ex.getMessage());

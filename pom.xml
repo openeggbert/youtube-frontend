@@ -24,9 +24,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.robertvokac.essential</groupId>
-        <artifactId>robertvokac-parent</artifactId>
-        <version>0.1.1-SNAPSHOT</version>
+        <groupId>com.openeggbert.essential</groupId>
+        <artifactId>openeggbert-parent</artifactId>
+        <version>0.1.2-SNAPSHOT</version>
     </parent>
 
     <groupId>com.openeggbert.utils</groupId>
@@ -56,7 +56,6 @@
             </plugins>
         </pluginManagement>
         <plugins>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -114,17 +113,17 @@
     <dependencies>
         <!-- Power dependencies -->
         <dependency>
-            <groupId>com.robertvokac.powerframework</groupId>
+            <groupId>com.openeggbert.powerframework</groupId>
             <artifactId>power-time</artifactId>
             <version>${power.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.robertvokac.powerframework</groupId>
+            <groupId>com.openeggbert.powerframework</groupId>
             <artifactId>power-utils</artifactId>
             <version>${power.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.robertvokac.powerframework</groupId>
+            <groupId>com.openeggbert.powerframework</groupId>
             <artifactId>power-io</artifactId>
             <version>${power.version}</version>
         </dependency>
@@ -215,23 +214,12 @@
         <repository>
             <id>openeggbert-releases-repository</id>
             <name>openeggbert-releases-repository</name>
-            <url>https://repo.openeggbert.com/releases</url>
+            <url>https://maven.openeggbert.com/releases</url>
         </repository>
         <repository>
             <id>openeggbert-snapshots-repository</id>
             <name>openeggbert-snapshots-repository</name>
-            <url>https://repo.openeggbert.com/snapshots</url>
-        </repository>
-        
-        <repository>
-            <id>robertvokac-releases-repository</id>
-            <name>robertvokac-releases-repository</name>
-            <url>https://maven.robertvokac.com/releases</url>
-        </repository>
-        <repository>
-            <id>robertvokac-snapshots-repository</id>
-            <name>robertvokac-snapshots-repository</name>
-            <url>https://maven.robertvokac.com/snapshots</url>
+            <url>https://maven.openeggbert.com/snapshots</url>
         </repository>
     </repositories>
 
@@ -239,24 +227,14 @@
         <pluginRepository>
             <id>openeggbert-releases-repository</id>
             <name>openeggbert-releases-repository</name>
-            <url>https://repo.openeggbert.com/releases</url>
+            <url>https://maven.openeggbert.com/releases</url>
         </pluginRepository>
         <pluginRepository>
             <id>openeggbert-snapshots-repository</id>
             <name>openeggbert-snapshots-repository</name>
-            <url>https://repo.openeggbert.com/snapshots</url>
+            <url>https://maven.openeggbert.com/snapshots</url>
         </pluginRepository>
-        
-        <pluginRepository>
-            <id>robertvokac-releases-repository</id>
-            <name>robertvokac-releases-repository</name>
-            <url>https://maven.robertvokac.com/releases</url>
-        </pluginRepository>
-        <pluginRepository>
-            <id>robertvokac-snapshots-repository</id>
-            <name>robertvokac-snapshots-repository</name>
-            <url>https://maven.robertvokac.com/snapshots</url>
-        </pluginRepository>
+
     </pluginRepositories>
 
 </project>

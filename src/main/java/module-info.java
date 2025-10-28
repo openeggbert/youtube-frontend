@@ -19,7 +19,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 module youtubedlfrontend {
-    requires lombok;
+    requires static lombok;
     requires org.apache.logging.log4j;
     requires org.json;
     requires dev.mccue.guava.io;

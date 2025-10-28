@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////
-// youtubedlfrontend: 
-// Copyright (C) 2024 the original author or authors.
+// youtubedl-frontend: Tool generating html pages for Archive Box.
+// Copyright (C) 2024-2025 the original author or authors.
 //
 // This program is free software: you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -18,15 +18,25 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-module youtubedlfrontend {
-    requires static lombok;
-    requires org.apache.logging.log4j;
-    requires org.json;
-    requires dev.mccue.guava.io;
-    requires humble.video.noarch;
-    requires humble.video.all;
-    requires com.fasterxml.jackson.databind;
-    requires java.desktop;
-    requires powerframework.io;
-    requires powerframework.utils;
-}
+#pragma once
+
+#include <string>
+#include <filesystem>
+#include "YoutubeVideo.h"
+
+class YoutubeVideoHtml {
+private:
+    std::string singleVideo;
+
+public:
+    YoutubeVideoHtml(
+        const YoutubeVideo& youtubeVideo,
+        const std::filesystem::path& archiveBoxRootDirectory,
+        const std::filesystem::path& archiveBoxArchiveDirectory,
+        long countOfVideosInChannel
+    );
+
+    std::string toString() const {
+        return singleVideo;
+    }
+};

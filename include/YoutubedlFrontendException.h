@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // youtubedl-frontend: Tool generating html pages for Archive Box.
-// Copyright (C) 2024 the original author or authors.
+// Copyright (C) 2024-2025 the original author or authors.
 //
 // This program is free software: you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -17,20 +17,31 @@
 // <https://www.gnu.org/licenses/> or write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ///////////////////////////////////////////////////////////////////////////////////////////////
-package com.openeggbert.utils.youtubedlfrontend;
+
 
 /**
  * @author <a href="mailto:mail@robertvokac.com">Robert Vokac</a>
  * @since 0.0.0
  */
-public class YoutubedlFrontendException extends RuntimeException {
+#ifndef YOUTUBEDLFRONTENDEXCEPTION_H
+#define YOUTUBEDLFRONTENDEXCEPTION_H
 
-    public YoutubedlFrontendException(String msg) {
-        super(msg);
-    }
+#include <stdexcept>
+#include <string>
+#include <exception>
 
-    public YoutubedlFrontendException(String msg, Exception e) {
-        super(msg, e);
-    }
+/**
+ * @author Robert Vokac
+ * @since 0.0.0
+ */
+class YoutubedlFrontendException : public std::runtime_error {
+public:
+    // constructor: only message
+    explicit YoutubedlFrontendException(const std::string& msg)
+        : std::runtime_error(msg) {}
 
-}
+    // constructor: message + inner exception
+    YoutubedlFrontendException(const std::string& msg, const std::exception& e)
+        : std::runtime_error(msg + " | caused by: " + e.what()) {}
+};
+#endif // YOUTUBEDLFRONTENDEXCEPTION_H

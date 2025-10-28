@@ -2,10 +2,9 @@
 
 *.metadata/**
 *.recommenders/**
-*target/**
 *build/**
 *.idea/**
 *.iml
 
-#*.class
 /target/
+build-release

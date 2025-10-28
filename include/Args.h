@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // youtubedl-frontend: Tool generating html pages for Archive Box.
-// Copyright (C) 2024 the original author or authors.
+// Copyright (C) 2024-2025 the original author or authors.
 //
 // This program is free software: you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -17,30 +17,41 @@
 // <https://www.gnu.org/licenses/> or write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ///////////////////////////////////////////////////////////////////////////////////////////////
-package com.openeggbert.utils.youtubedlfrontend;
-
-import lombok.Getter;
 
 /**
  *
  * @author robertvokac
  */
-public enum ArgType {
-    VIDEO("video", null),
-    CHANNEL("channel", null),
-    VIDEOS_PER_ROW("videos-per-row", "4"),
-    ALWAYS_GENERATE_METADATA("always-generate-metadata", "true"),
-    ALWAYS_GENERATE_HTML_FILES("always-generate-html-files", "true"),
-    THUMBNAIL_AS_BASE64("thumbnail-as-base64", "false"),
-    THUMBNAIL_LINKS_TO_YOUTUBE("thumbnail-links-to-youtube", "false");
-    @Getter
-    private final String name;
-    @Getter
-    private final String defaultValue;
+#ifndef ARGS_H
+#define ARGS_H
 
-    ArgType(String name, String defaultValue) {
-        this.name = name;
-        this.defaultValue = defaultValue;
-    }
+#include <string>
+#include <unordered_map>
+#include <optional>
+#include <vector>
+#include <iostream>
 
-}
+#include "ArgType.h"
+#include "Arg.h"
+
+class Args {
+public:
+    static inline const std::string TWO_DASHES = "--";
+
+private:
+    std::unordered_map<ArgType, Arg> map;
+
+public:
+    Args() = default;
+
+    explicit Args(const std::vector<std::string>& args);
+
+    std::optional<std::string> getString(ArgType type) const;
+
+    bool getBool(ArgType type) const;
+
+    std::optional<int> getInt(ArgType type) const;
+
+    std::string to_string() const;
+};
+#endif // ARGS_H

@@ -1,0 +1,10 @@
+#files to ignore
+
+*.metadata/**
+*.recommenders/**
+*build/**
+*.idea/**
+*.iml
+
+/target/
+build-release

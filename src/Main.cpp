@@ -99,8 +99,8 @@ int main(int argc, char** argv) {
     if (args.size() < 1) {
         std::string argsS =
             "/rv/big/foreign-blupi-videos-on-youtube --video_ 5rGd2VQz3mo --always-generate-metadata 1"
-            " --always-generate-html-files 1 --videos-per-row 4 --thumbnail-links-to-youtube 1"
-            " --thumbnail-as-base64 1"
+            " --always-generate-html-files 1 --videos-per-row 4 --thumbnail-links-to-youtube 0"
+            " --thumbnail-as-base64 0"
             " --channel_ UCqBpgfXap7cZOYkAC34u8Lg";
 
         std::stringstream ss(argsS);
@@ -268,7 +268,7 @@ static std::string createChannelHtml(
     const std::string basePrefix = wantedChannelName ? "../" : "";
 
     out << R"(<!DOCTYPE html>
-<html lang="cs">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -279,13 +279,13 @@ static std::string createChannelHtml(
 </head>
 <body>
 <header class="site-header"><div class="inner">
-<a class="brand" href=")" << basePrefix << R"(videos.html"><span class="dot"></span>Youtube archiv</a>
+<a class="brand" href=")" << basePrefix << R"(videos.html"><span class="dot"></span>Youtube archive</a>
 </div></header>
 <main class="page">
 )";
 
     if (wantedChannelName)
-        out << "<p class=\"crumb\"><a href=\"" << basePrefix << "videos.html\">← všechny kanály</a></p>\n";
+        out << "<p class=\"crumb\"><a href=\"" << basePrefix << "videos.html\">← all channels</a></p>\n";
 
     for (const auto& channel : channels) {
         if (wantedChannelName && *wantedChannelName != channel)
@@ -307,10 +307,10 @@ static std::string createChannelHtml(
         out << "<section class=\"channel-block\">\n";
         out << "<div class=\"channel-block-head\">";
         out << "<div><h1 class=\"page-title\">" << Utils::escapeHtml(channel) << "</h1>"
-            << "<span class=\"count\">" << countOfVideosInChannel << " videí</span></div>";
+            << "<span class=\"count\">" << countOfVideosInChannel << " videos</span></div>";
         out << "<div class=\"channel-links\">";
-        out << "<a class=\"pill\" href=\"" << basePrefix << "channels/" << channelId << ".html\">Zobrazit videa</a>";
-        out << "<a class=\"pill ghost\" target=\"_blank\" rel=\"noopener\" href=\"" << url << "\">Kanál na YouTube ↗</a>";
+        out << "<a class=\"pill\" href=\"" << basePrefix << "channels/" << channelId << ".html\">View videos</a>";
+        out << "<a class=\"pill ghost\" target=\"_blank\" rel=\"noopener\" href=\"" << url << "\">Channel on YouTube ↗</a>";
         out << "</div></div>\n";
 
         if (wantedChannelName) {

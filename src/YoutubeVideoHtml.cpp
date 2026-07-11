@@ -137,7 +137,7 @@ YoutubeVideoHtml::YoutubeVideoHtml(
     const std::string finalUrl = "https://www.youtube.com/watch?v=" + youtubeVideo.id;
 
     html << R"(<!DOCTYPE html>
-<html lang="cs">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -149,10 +149,10 @@ YoutubeVideoHtml::YoutubeVideoHtml(
 </head>
 <body>
 <header class="site-header"><div class="inner">
-<a class="brand" href="../videos.html"><span class="dot"></span>Youtube archiv</a>
+<a class="brand" href="../videos.html"><span class="dot"></span>Youtube archive</a>
 </div></header>
 <main class="page">
-<p class="crumb"><a href="../videos.html">← všechna videa</a></p>
+<p class="crumb"><a href="../videos.html">← all videos</a></p>
 <div class="video-page">
 <div>
 )";
@@ -168,7 +168,7 @@ YoutubeVideoHtml::YoutubeVideoHtml(
         html << "<video src=\"../archive/" << youtubeVideo.snapshot
              << "/media/" << encodedFile
              << "\" controls>"
-             << "Váš prohlížeč nepodporuje přehrávání videa."
+             << "Your browser does not support video playback."
              << "</video>";
     } else {
         html << "<a target=\"_blank\" href=\"" << videoLocalUrl << "\">"
@@ -190,14 +190,14 @@ YoutubeVideoHtml::YoutubeVideoHtml(
 
     html << "<div class=\"nav-row\">";
     if (backEnabled)
-        html << "<a class=\"pill\" href=\"./" << youtubeVideo.previousVideoId << ".html\">← Zpět</a>";
+        html << "<a class=\"pill\" href=\"./" << youtubeVideo.previousVideoId << ".html\">← Back</a>";
     else
-        html << "<span class=\"pill disabled\">← Zpět</span>";
+        html << "<span class=\"pill disabled\">← Back</span>";
 
     if (nextEnabled)
-        html << "<a class=\"pill primary\" href=\"./" << youtubeVideo.nextVideoId << ".html\">Další →</a>";
+        html << "<a class=\"pill primary\" href=\"./" << youtubeVideo.nextVideoId << ".html\">Next →</a>";
     else
-        html << "<span class=\"pill primary disabled\">Další →</span>";
+        html << "<span class=\"pill primary disabled\">Next →</span>";
 
     html << "<span class=\"n\">#" << youtubeVideo.number << " / " << countOfVideosInChannel << "</span>";
     html << "</div>\n";
@@ -213,21 +213,21 @@ YoutubeVideoHtml::YoutubeVideoHtml(
     html << "<span class=\"chip\">" << std::fixed << std::setprecision(2) << mb << " MB</span>";
     if (!uploadDate.empty())
         html << "<span class=\"chip\">" << Utils::escapeHtml(uploadDate) << "</span>";
-    html << "<a class=\"chip dl\" href=\"../archive/" << youtubeVideo.snapshot << "/media/" << encodedFile << "\">⭳ Stáhnout</a>";
-    html << "<a class=\"chip\" target=\"_blank\" href=\"" << finalUrl << "\">▶ Na YouTube</a>";
+    html << "<a class=\"chip dl\" href=\"../archive/" << youtubeVideo.snapshot << "/media/" << encodedFile << "\">⭳ Download</a>";
+    html << "<a class=\"chip\" target=\"_blank\" href=\"" << finalUrl << "\">▶ On YouTube</a>";
     html << "</div>\n";
 
     // ----------- Description -----------
     html << "<div class=\"desc\">";
     if (youtubeVideo.description.empty())
-        html << "Bez popisu";
+        html << "No description";
     else
         html << Utils::escapeHtml(youtubeVideo.description);
     html << "</div>\n";
 
     // ----------- Comments -----------
     html << "<div class=\"comments\">";
-    html << "<h2>Komentáře";
+    html << "<h2>Comments";
     if (!youtubeVideo.comments.empty())
         html << " · " << youtubeVideo.comments.size();
     html << "</h2>";
@@ -259,12 +259,12 @@ YoutubeVideoHtml::YoutubeVideoHtml(
     // ----------- Sidebar -----------
     html << "<div class=\"side\">";
 
-    html << "<div class=\"box\"><h2>Detaily souboru</h2>";
-    html << "<div class=\"kv\"><span class=\"k\">Formát</span><span class=\"v\">"
+    html << "<div class=\"box\"><h2>File details</h2>";
+    html << "<div class=\"kv\"><span class=\"k\">Format</span><span class=\"v\">"
          << Utils::escapeHtml(youtubeVideo.ext.empty() ? "?" : youtubeVideo.ext) << "</span></div>";
-    html << "<div class=\"kv\"><span class=\"k\">Délka</span><span class=\"v\">"
+    html << "<div class=\"kv\"><span class=\"k\">Duration</span><span class=\"v\">"
          << Utils::escapeHtml(youtubeVideo.videoDuration) << "</span></div>";
-    html << "<div class=\"kv\"><span class=\"k\">Velikost</span><span class=\"v\">"
+    html << "<div class=\"kv\"><span class=\"k\">Size</span><span class=\"v\">"
          << std::fixed << std::setprecision(2) << mb << " MB</span></div>";
     if (!youtubeVideo.videoFileSha512HashSum.empty())
         html << "<div class=\"kv\"><span class=\"k\">SHA-512</span><span class=\"v\" title=\""
@@ -280,17 +280,17 @@ YoutubeVideoHtml::YoutubeVideoHtml(
         cmd << "cd " << (archiveBoxArchiveDirectory / youtubeVideo.snapshot / "media").string()
             << " && ffmpeg -i " << vEsc << " -preset slow -crf 18 " << vWebm;
 
-        html << "<div class=\"box cmd-box\"><h2>Převod na WebM</h2>"
+        html << "<div class=\"box cmd-box\"><h2>Convert to WebM</h2>"
              << "<input type=\"text\" class=\"cmd-input\" readonly value=\""
              << Utils::escapeHtml(cmd.str()) << "\"></div>\n";
     } else {
-        html << "<div class=\"box cmd-box\"><h2>Umístění na disku</h2>"
+        html << "<div class=\"box cmd-box\"><h2>File location</h2>"
              << "<input type=\"text\" class=\"cmd-input\" readonly value=\""
              << Utils::escapeHtml((archiveBoxArchiveDirectory / youtubeVideo.snapshot / "media").string())
              << "\"></div>\n";
     }
 
-    html << "<div class=\"box cmd-box\"><h2>Zdrojová URL</h2>"
+    html << "<div class=\"box cmd-box\"><h2>Source URL</h2>"
          << "<input type=\"text\" class=\"cmd-input\" readonly value=\""
          << Utils::escapeHtml(finalUrl) << "\"></div>\n";
 

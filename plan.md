@@ -8,9 +8,15 @@ Scope: the whole C++ generator (`src/`, `include/`) + the generated HTML/CSS out
 > reworked video page) is done and verified via a clean build plus a real
 > run of the tool against test data (valid HTML, escaping works, the
 > `videos-per-row` bug is fixed). The generated HTML output and this
-> document have since been translated to English. **Phase E below is new
-> and not yet implemented** — it's a backlog of further improvements found
-> during and after the Phase A–D work, to be picked up next.
+> document have since been translated to English.
+>
+> **Phase E1 implemented** (2026-07-11) — items E1.1–E1.4 below are done:
+> broken zero-args fallback replaced with `--help`/usage + unknown-flag
+> validation, videos with no channel now get a real "Unknown channel" page
+> and their video page instead of disappearing, and orphaned comment
+> replies are now shown as top-level comments with a warning instead of
+> silently dropped. Verified with a synthetic fixture covering all four
+> cases. **Phases E2–E4 are still just a backlog**, not implemented.
 
 What this is: a tool that generates static HTML pages (channel/video overview
 + a single-video page with comments) over an archive downloaded via
@@ -173,7 +179,8 @@ output was verified afterwards the same way.
 | B | CSS extraction + redesign (grid, dark theme, cards, buttons) | ✅ done |
 | C | Remaining medium-severity bugs (#4–#8: MIME, error handling, parsing) | ✅ done |
 | D | Code cleanup (#9 static variables, #10 dead code) | ✅ done |
-| E | New backlog from post-implementation review (see below) | 🆕 not started |
+| E1 | CLI/help + no-channel videos + orphaned comments (see below) | ✅ done |
+| E2–E4 | Performance, generated-site UX, code quality backlog (see below) | 🆕 not started |
 
 ---
 
@@ -188,44 +195,64 @@ output was verified afterwards the same way.
 
 ---
 
-## 5. Phase E — backlog from post-implementation review (not yet implemented)
+## 5. Phase E — backlog from post-implementation review
 
-Found while reviewing the finished Phase A–D work. Nothing in this section
-has been implemented yet — it's for discussion/prioritization before any
+Found while reviewing the finished Phase A–D work. **E1 is implemented**;
+E2–E4 are still just a backlog for discussion/prioritization before any
 code changes.
 
-### E1. Found while implementing (worth prioritizing)
+### E1. Found while implementing (done)
 
 1. **The zero-args fallback is broken and personally-scoped.**
    `src/Main.cpp` (the `if (args.size() < 1)` branch) — running the binary
-   with no arguments uses a hardcoded developer path
+   with no arguments used a hardcoded developer path
    (`/rv/big/foreign-blupi-videos-on-youtube`) and flags `--video_` /
    `--channel_`. The real flag names are `--video` / `--channel` (no
    trailing underscore) — `Args.cpp` requires an exact match, so these two
-   never actually register. Effect: running with no args silently processes
-   the **entire archive** instead of the one video/channel it looks like
-   it's meant to filter to. A general-purpose CLI tool shouldn't run
-   personally-scoped, non-deterministic behavior when invoked with no
-   arguments — it should print usage instead.
+   never actually registered. Effect: running with no args silently processed
+   the **entire archive** instead of the one video/channel it looked like
+   it was meant to filter to.
+   - **Status: fixed.** The hardcoded fallback is gone. Zero args now prints
+     usage and exits with status 1; `-h`/`--help` prints the same usage and
+     exits 0. Usage text is generated from `ArgType`'s name/default/description
+     metadata (single source of truth, see `printUsage()` in `Main.cpp`).
 
 2. **No CLI argument validation or `--help`.**
    An unknown or mistyped flag (`--videos-per-row5`,
-   `--thumbnail-as-base65`...) is **silently ignored** — `Args.cpp` just
-   fails to find a match and moves on. There's also no `--help`/`-h`.
+   `--thumbnail-as-base65`...) was **silently ignored** — `Args.cpp` just
+   failed to find a match and moved on.
+   - **Status: fixed.** `Args.cpp` now throws `YoutubedlFrontendException`
+     for any unrecognized `--`-prefixed token, and `main()` wraps its body
+     in try/catch to print `Error: <message>` and exit 1 instead of an
+     unhandled-exception crash.
 
 3. **Videos with no `channelName` disappear entirely from the output.**
-   `Main.cpp` builds the channel list only from videos with a non-empty
-   `channelName`. A video without a recognized channel never appears in any
-   `<a>` loop, so its `videos/<id>.html` page is **never generated at all**
-   — not just missing from navigation. The only trace is a line in the raw
-   console duration/size dump at the end of the run. Needs either an
-   "Uncategorized" catch-all page, or at minimum still generating the video
-   page.
+   `Main.cpp` built the channel list only from videos with a non-empty
+   `channelName`. A video without a recognized channel never appeared in any
+   `<a>` loop, so its `videos/<id>.html` page was **never generated at all**
+   — not just missing from navigation.
+   - **Status: fixed.** `YoutubeVideo::loadYoutubeVideos` now normalizes an
+     empty `channelName` to the shared `YoutubeVideo::UNCATEGORIZED_CHANNEL_NAME`
+     ("Unknown channel") before sorting, so these videos get a real
+     `channels/uncategorized.html` page and their own video pages like any
+     other channel. The fake "Channel on YouTube" external link is skipped
+     for this synthetic bucket (empty `channelUrl`).
 
 4. **Orphaned comment replies are silently dropped.**
-   `YoutubeComment::getChildren` filters strictly by `parentId` — if a
-   reply's parent comment is missing from the data (deleted/edge case), the
-   reply is never rendered, with no warning.
+   `YoutubeComment::getChildren` filtered strictly by `parentId` — if a
+   reply's parent comment was missing from the data (deleted/edge case), the
+   reply was never rendered, with no warning.
+   - **Status: fixed.** `YoutubeComment::sort` now detects comments
+     unreachable from `"root"`, logs a `[Warning] N comment(s) reference a
+     missing parent...`, and appends them as top-level comments instead of
+     dropping them.
+
+Verified with an extended synthetic fixture: `--help`/`-h` output, zero-args
+exit code, an unknown-flag error, a video with empty channel metadata (now
+gets `channels/uncategorized.html` + its own video page, shows up in the
+master list, no external channel link rendered), and a comment replying to
+a non-existent parent (now rendered top-level with the warning logged). All
+generated HTML still passes the well-formedness check.
 
 ### E2. Performance / scalability
 

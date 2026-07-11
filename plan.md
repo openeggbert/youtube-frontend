@@ -44,8 +44,20 @@ Scope: the whole C++ generator (`src/`, `include/`) + the generated HTML/CSS out
 > `include/PageShell.h`/`src/PageShell.cpp`. Verified with a full
 > regeneration (header/filter/theme-select present on index, channel and
 > video pages; stats totals and rankings correct; both ffmpeg commands
-> render) plus a visual artifact review. **Phase E4 is still just a
-> backlog**, not implemented.
+> render) plus a visual artifact review.
+>
+> **Phase E4 partially implemented** (2026-07-11), by explicit choice —
+> items E4.12 (unit tests) and E4.14 (compiler warnings) are done; E4.13
+> (CI) and E4.15 (OpenSSL EVP migration) were deliberately **deferred**,
+> not forgotten (see the E4 section below for why). `-Wall -Wextra
+> -Wpedantic` is now on by default and the build is clean under it (one
+> dead-code warning was found and fixed). A small hand-rolled test harness
+> (`tests/TestFramework.*` — no external framework is installed in this
+> environment, and pulling one in via a system package or FetchContent
+> felt heavier than this project's test surface warrants) covers `Utils`,
+> `Args` parsing, `YoutubeComment::sort` threading/orphan-handling, and
+> `YoutubeVideo`'s sort order, wired into CMake as a second target
+> (`youtube_frontend_tests`, runnable via `ctest`). 27/27 tests pass.
 
 What this is: a tool that generates static HTML pages (channel/video overview
 + a single-video page with comments) over an archive downloaded via
@@ -211,7 +223,7 @@ output was verified afterwards the same way.
 | E1 | CLI/help + no-channel videos + orphaned comments (see below) | ✅ done |
 | E2 | Pagination + parallel/cached thumbnail encoding (see below) | ✅ done |
 | E3 | Stats page, filter, theme selector, 480p ffmpeg command (see below) | ✅ done |
-| E4 | Code quality backlog (see below) | 🆕 not started |
+| E4 | Code quality backlog (see below) | ◐ partial (12, 14 done; 13, 15 deferred) |
 
 ---
 
@@ -379,20 +391,48 @@ command boxes render for `.mkv` videos, `app.js` brace-balance sanity
 check, and a visual artifact review of the real generated output. All
 generated HTML still passes the well-formedness check.
 
-### E4. Code quality / maintenance
+### E4. Code quality / maintenance (12 and 14 done; 13 and 15 deferred)
 
 12. **No automated tests** — neither unit nor integration. Good first
     candidates: `Utils::escapeHtml`, `Utils::formatDurationShort`,
     `Args` parsing edge cases, `YoutubeComment::sort` threading logic.
+    - **Status: done.** Added `tests/TestFramework.h`/`.cpp` — a small
+      dependency-free harness (`TEST()`, `CHECK()`, `CHECK_EQ()`,
+      `CHECK_THROWS()`, `CHECK_NOTHROW()`) since no test framework is
+      installed in this environment and pulling one in (system package or
+      CMake `FetchContent` from GitHub) felt heavier than this project's
+      test surface warrants. 27 tests across `UtilsTest.cpp`,
+      `ArgsTest.cpp`, `YoutubeCommentTest.cpp`, `YoutubeVideoTest.cpp`,
+      including regression tests for the Phase A `videos-per-row` bug and
+      the Phase E1 unknown-flag/orphaned-comment fixes. Wired into
+      `CMakeLists.txt` as a second target, `youtube_frontend_tests`,
+      runnable directly or via `ctest`. All 27 pass.
 13. **No CI** (e.g. GitHub Actions) — the build is clean today; nothing
     currently guards against that regressing on future pushes/PRs.
+    - **Status: deferred, by explicit choice.** Value is mostly about
+      catching regressions on future pushes/PRs from other
+      contributors/CI-driven workflows; for a single-maintainer project
+      the payoff is smaller and setting up a CI image with the OpenCV/
+      libavformat/curl toolchain has some real trial-and-error cost. Worth
+      revisiting if this project gets more contributors or a release
+      process.
 14. **No compiler warning flags** in `CMakeLists.txt`
     (`-Wall -Wextra -Wpedantic`) — some of the bugs fixed in Phase A–D
     (unguarded `stoi`/`stoll`, etc.) are exactly the kind of thing a
     stricter warning level or static analysis would have caught earlier.
+    - **Status: done.** Flags added globally in `CMakeLists.txt`. A clean
+      rebuild surfaced exactly one warning (`archiveCount` declared and
+      never used in `YoutubeVideo::loadYoutubeVideos`, dead since the
+      Phase E2 refactor moved that counter into `Main.cpp`) — fixed by
+      removing it. Nothing else fired; the codebase is otherwise clean
+      under `-Wall -Wextra -Wpedantic`.
 15. The build emits deprecation warnings for `SHA512_Init`/`Update`/`Final`
     (deprecated by OpenSSL 3.0 in favor of the EVP API) — not functionally
     broken today, but worth migrating before a future OpenSSL removes them.
+    - **Status: deferred, by explicit choice.** Purely a future-proofing
+      concern (nothing is broken today); low urgency, isolated to one
+      function (`Utils::calculateSHA512Hash`) whenever it's picked up.
 
-No priority order has been assigned yet within Phase E — to be discussed
-before picking what to implement next.
+No priority order has been assigned yet within the remaining Phase E4
+backlog (items 13 and 15) — revisit when/if their triggering conditions
+(more contributors, a CI need, an OpenSSL upgrade forcing the issue) show up.

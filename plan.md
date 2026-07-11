@@ -16,7 +16,18 @@ Scope: the whole C++ generator (`src/`, `include/`) + the generated HTML/CSS out
 > and their video page instead of disappearing, and orphaned comment
 > replies are now shown as top-level comments with a warning instead of
 > silently dropped. Verified with a synthetic fixture covering all four
-> cases. **Phases E2–E4 are still just a backlog**, not implemented.
+> cases.
+>
+> **Phase E2 implemented** (2026-07-11) — items E2.5–E2.7 below are done:
+> large channels now paginate across `channels/<id>[-page<N>].html` via a
+> new `--videos-per-page` option (video numbering stays global so
+> individual video pages' Back/Next keep working); base64 thumbnail
+> encoding is parallelized per page via a shared `ThreadPool` (now in
+> `include/ThreadPool.h`, reused from `YoutubeVideo.cpp` too); and the
+> encoded thumbnail is cached to a `<file>.b64` sidecar and reused across
+> runs unless `--always-generate-metadata 1` forces a refresh. Verified
+> with a forced small `--videos-per-page` and cache-hit/cache-bypass
+> mtime checks. **Phases E3–E4 are still just a backlog**, not implemented.
 
 What this is: a tool that generates static HTML pages (channel/video overview
 + a single-video page with comments) over an archive downloaded via
@@ -180,7 +191,8 @@ output was verified afterwards the same way.
 | C | Remaining medium-severity bugs (#4–#8: MIME, error handling, parsing) | ✅ done |
 | D | Code cleanup (#9 static variables, #10 dead code) | ✅ done |
 | E1 | CLI/help + no-channel videos + orphaned comments (see below) | ✅ done |
-| E2–E4 | Performance, generated-site UX, code quality backlog (see below) | 🆕 not started |
+| E2 | Pagination + parallel/cached thumbnail encoding (see below) | ✅ done |
+| E3–E4 | Generated-site UX, code quality backlog (see below) | 🆕 not started |
 
 ---
 
@@ -192,14 +204,16 @@ output was verified afterwards the same way.
   rather than a hard column count or being removed entirely.
 - **HTML language**: generated output and this document are in English
   (`lang="en"`); UI strings were translated from the initial Czech draft.
+- **`videos-per-page` default**: 60, chosen as a reasonable page length for
+  the card grid; adjustable via `--videos-per-page`.
 
 ---
 
 ## 5. Phase E — backlog from post-implementation review
 
-Found while reviewing the finished Phase A–D work. **E1 is implemented**;
-E2–E4 are still just a backlog for discussion/prioritization before any
-code changes.
+Found while reviewing the finished Phase A–D work. **E1 and E2 are
+implemented**; E3–E4 are still just a backlog for discussion/prioritization
+before any code changes.
 
 ### E1. Found while implementing (done)
 
@@ -254,18 +268,43 @@ master list, no external channel link rendered), and a comment replying to
 a non-existent parent (now rendered top-level with the warning logged). All
 generated HTML still passes the well-formedness check.
 
-### E2. Performance / scalability
+### E2. Performance / scalability (done)
 
 5. **One channel = one giant HTML page.** No pagination or limit — a
    channel with 500+ videos generates a single very large file. Combined
    with `--thumbnail-as-base64 1` this means hundreds of inline base64
    images on one page (megabytes of inline HTML).
+   - **Status: fixed.** New `--videos-per-page` option (default 60) splits
+     a channel's grid across `channels/<id>.html`, `channels/<id>-page2.html`,
+     `channels/<id>-page3.html`, ... with a Previous/Next pager
+     (`pagerHtml()` in `Main.cpp`). Video numbering (`#N` on the card, and
+     the `#N / total` counter on each video's own page) is assigned once
+     across the whole channel *before* splitting into pages, so it stays
+     stable regardless of pagination and Back/Next between individual video
+     pages is unaffected.
 6. **Base64 thumbnail encoding is sequential**, outside the `ThreadPool`
    used for the initial metadata loading phase — could be parallelized for
    large archives.
+   - **Status: fixed.** The `ThreadPool` class was extracted out of
+     `YoutubeVideo.cpp` into `include/ThreadPool.h` so it can be shared.
+     `generateChannelPages()` in `Main.cpp` creates one pool per channel
+     (only when `--thumbnail-as-base64 1`) and encodes each page's batch of
+     thumbnails concurrently instead of one at a time.
 7. With `--always-generate-html-files 1`, **the resize + base64 encode is
    redone on every run** even when the source thumbnail hasn't changed —
    could be cached alongside the metadata file.
+   - **Status: fixed.** `buildThumbnailSrc()` writes the encoded data URI to
+     a `<mini-thumbnail file>.b64` sidecar next to the source thumbnail and
+     reuses it on later runs. `--always-generate-metadata 1` (which already
+     meant "regenerate cached derived data") now also bypasses this cache,
+     so the two "regenerate everything" flags stay consistent.
+
+Verified by forcing pagination with a small `--videos-per-page` value on a
+test channel (page 1/2 files, correct pager links, stable global numbering,
+both videos' own pages still generated), and by checking the `.b64` cache
+file's mtime is unchanged across a repeat run (`--always-generate-metadata 0`)
+but does change when forced (`--always-generate-metadata 1`). All generated
+HTML still passes the well-formedness check.
 
 ### E3. Generated-site UX
 

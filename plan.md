@@ -27,7 +27,25 @@ Scope: the whole C++ generator (`src/`, `include/`) + the generated HTML/CSS out
 > encoded thumbnail is cached to a `<file>.b64` sidecar and reused across
 > runs unless `--always-generate-metadata 1` forces a refresh. Verified
 > with a forced small `--videos-per-page` and cache-hit/cache-bypass
-> mtime checks. **Phases E3–E4 are still just a backlog**, not implemented.
+> mtime checks.
+>
+> **Phase E3 implemented** (2026-07-11) — items E3.8–E3.11 below are done:
+> a new `stats.html` page surfaces the duration/size rankings and the
+> "snapshots without a video file" warning that used to be console-only;
+> every channel grid page now has a client-side title filter
+> (`assets/app.js`, works fine with JS disabled - it's pure enhancement);
+> a header `<select>` (Auto/Light/Dark) added to the now-shared
+> `pageShellOpen()` overrides the theme via a CSS `:has()` rule, with the
+> choice persisted across pages via `localStorage`; and the video page
+> offers both the full-quality and a 480p-scaled ffmpeg command, matching
+> both variants already documented in the README. The page shell (head +
+> site header) used to be duplicated between `Main.cpp` and
+> `YoutubeVideoHtml.cpp` - it's now one shared `pageShellOpen()` in
+> `include/PageShell.h`/`src/PageShell.cpp`. Verified with a full
+> regeneration (header/filter/theme-select present on index, channel and
+> video pages; stats totals and rankings correct; both ffmpeg commands
+> render) plus a visual artifact review. **Phase E4 is still just a
+> backlog**, not implemented.
 
 What this is: a tool that generates static HTML pages (channel/video overview
 + a single-video page with comments) over an archive downloaded via
@@ -192,7 +210,8 @@ output was verified afterwards the same way.
 | D | Code cleanup (#9 static variables, #10 dead code) | ✅ done |
 | E1 | CLI/help + no-channel videos + orphaned comments (see below) | ✅ done |
 | E2 | Pagination + parallel/cached thumbnail encoding (see below) | ✅ done |
-| E3–E4 | Generated-site UX, code quality backlog (see below) | 🆕 not started |
+| E3 | Stats page, filter, theme selector, 480p ffmpeg command (see below) | ✅ done |
+| E4 | Code quality backlog (see below) | 🆕 not started |
 
 ---
 
@@ -206,6 +225,12 @@ output was verified afterwards the same way.
   (`lang="en"`); UI strings were translated from the initial Czech draft.
 - **`videos-per-page` default**: 60, chosen as a reasonable page length for
   the card grid; adjustable via `--videos-per-page`.
+- **Theme selector default**: "Auto" (follows OS preference); explicit
+  Light/Dark choices are stored per-browser via `localStorage`, not baked
+  into the generated files.
+- **JS is optional everywhere**: the title filter and theme selector are
+  both pure progressive enhancement - every generated page is fully usable
+  with JavaScript disabled or blocked.
 
 ---
 
@@ -306,21 +331,53 @@ file's mtime is unchanged across a repeat run (`--always-generate-metadata 0`)
 but does change when forced (`--always-generate-metadata 1`). All generated
 HTML still passes the well-formedness check.
 
-### E3. Generated-site UX
+### E3. Generated-site UX (done)
 
 8. **Stats and warnings only ever go to the console.** The
    duration/size-sorted lists and the "Snapshots without videos" warning
    are never written to the generated site, even though they'd make a
    useful `stats.html`/`warnings.html` page.
+   - **Status: fixed.** New `stats.html` at the archive root
+     (`createStatsHtml()` in `Main.cpp`): total video count/duration/size
+     chips, a "Snapshots without a video file" warning list, and every
+     video ranked by duration and by file size, each row linking to its
+     own `videos/<id>.html`.
 9. **No search/filter across videos.** The output is static with no JS at
    all. A small vanilla-JS title filter (progressive enhancement, no build
    step, works without JS too) would help larger archives.
+   - **Status: fixed.** `assets/app.js` (`Assets::APP_JS` in
+     `AssetsScript.cpp`) filters a channel page's `.card` elements as you
+     type into a `<input type="search">` above the grid. Without JS the
+     input just does nothing - all cards stay visible, nothing is gated
+     on script execution.
 10. **No manual dark/light toggle** — currently follows
     `prefers-color-scheme` only. Could be done in pure CSS (checkbox hack),
     no JS needed.
+    - **Status: fixed.** A header `<select id="theme-select">`
+      (Auto/Light/Dark) drives `html:has(#theme-select option[value="…"]
+      :checked)` rules in `style.css` that override the CSS custom
+      properties on top of the `prefers-color-scheme` default. `app.js`
+      persists the choice via `localStorage` across page loads; the select
+      still works as a same-page toggle with JS off, it just won't persist.
 11. The README documents two ffmpeg conversion variants (full quality and
     a 480p-scaled version), but the generated video page only ever offers
     one (crf 18, no scaling). Could offer both command boxes.
+    - **Status: fixed.** `YoutubeVideoHtml.cpp` now renders a second
+      "Convert to WebM (480p)" box with `-vf scale=-1:480` alongside the
+      existing full-quality command.
+
+Also did some supporting cleanup while wiring these in: the page shell
+(`<head>` + site header) was duplicated between `Main.cpp` and
+`YoutubeVideoHtml.cpp` - it's now one shared `pageShellOpen(basePrefix,
+title)` in `include/PageShell.h`/`src/PageShell.cpp`, so header changes
+land on every page type at once.
+
+Verified with a full regeneration: header nav (Stats link + theme select)
+present on index/channel/video pages, filter input present on multi-video
+channel pages, stats.html totals/rankings/escaping correct, both ffmpeg
+command boxes render for `.mkv` videos, `app.js` brace-balance sanity
+check, and a visual artifact review of the real generated output. All
+generated HTML still passes the well-formedness check.
 
 ### E4. Code quality / maintenance
 

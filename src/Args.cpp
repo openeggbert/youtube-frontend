@@ -63,10 +63,12 @@ Args::Args(const std::vector<std::string>& args)
 
             if (found.value() == ArgType::VIDEOS_PER_ROW)
             {
-                int intVal = std::atoi(args[i].c_str());
+                int intVal = std::atoi(value.c_str());
                 if (intVal < 2)
                 {
-                    value = "0";
+                    // Invalid value: ignore it and fall back to the default
+                    // instead of storing "0", which would collapse the layout.
+                    continue;
                 }
             }
 

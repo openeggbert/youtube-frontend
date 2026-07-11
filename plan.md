@@ -3,6 +3,12 @@
 Datum: 2026-07-11
 Rozsah: celý C++ generátor (`src/`, `include/`) + vygenerovaný HTML/CSS výstup.
 
+> **Stav: fáze A–D implementovány** (2026-07-11). Všechny bugy popsané níže
+> jsou opravené, redesign (sdílený `assets/style.css`, CSS grid mřížka karet,
+> přepracovaná stránka videa) je hotový a ověřený buildem + během nástroje na
+> testovacích datech (validní HTML, funkční escapování, opravený
+> `videos-per-row`). Zbytek dokumentu je ponechán jako záznam původní analýzy.
+
 Co to je: nástroj generující statické HTML stránky (přehled kanálů/videí + stránka
 jednotlivého videa s komentáři) nad archivem staženým přes ArchiveBox/yt-dlp.
 

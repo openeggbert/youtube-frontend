@@ -17,6 +17,7 @@ add_executable(youtube_frontend
         src/Args.cpp
         src/Utils.cpp
         src/YoutubeVideoHtml.cpp
+        src/AssetsStyle.cpp
 )
 
 target_include_directories(youtube_frontend PUBLIC

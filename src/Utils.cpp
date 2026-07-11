@@ -49,39 +49,6 @@ std::string Utils::makeFirstLetterUppercase(const std::string& s)
     return r;
 }
 
-int Utils::getCountOfSlashOccurrences(std::string_view s)
-{
-    return std::count(s.begin(), s.end(), '/');
-}
-
-std::vector<fs::path> Utils::listAllFilesInDir(const fs::path& dir)
-{
-    std::vector<fs::path> result;
-    listAllFilesInDirRec(dir, result);
-    return result;
-}
-
-std::string Utils::createDoubleDotSlash(int times)
-{
-    std::string r;
-    for (int i = 0; i < times; i++)
-        r += "../";
-    return r;
-}
-
-void Utils::copyFile(const fs::path& src, const fs::path& dstDir)
-{
-    try
-    {
-        fs::copy_file(src, dstDir / src.filename(),
-                      fs::copy_options::overwrite_existing);
-    }
-    catch (const std::exception& e)
-    {
-        throw YoutubedlFrontendException("Copying file failed: " + src.string());
-    }
-}
-
 void Utils::writeTextToFile(const std::string& text, const fs::path& file)
 {
     std::ofstream ofs(file);
@@ -203,15 +170,55 @@ std::vector<std::string> Utils::split(const std::string& str, char delimiter)
 }
 
 
-void Utils::listAllFilesInDirRec(const fs::path& dir, std::vector<fs::path>& files)
+std::string Utils::escapeHtml(const std::string& s)
 {
-    files.push_back(dir);
+    std::string out;
+    out.reserve(s.size());
 
-    for (auto& p : fs::directory_iterator(dir))
+    for (char c : s)
     {
-        if (fs::is_directory(p.path()))
-            listAllFilesInDirRec(p.path(), files);
-        else
-            files.push_back(p.path());
+        switch (c)
+        {
+        case '&':
+            out += "&amp;";
+            break;
+        case '<':
+            out += "&lt;";
+            break;
+        case '>':
+            out += "&gt;";
+            break;
+        case '"':
+            out += "&quot;";
+            break;
+        case '\'':
+            out += "&#39;";
+            break;
+        default:
+            out += c;
+        }
     }
+    return out;
+}
+
+std::string Utils::formatDurationShort(const std::string& rawDuration)
+{
+    // rawDuration looks like "hh:mm:ss.xx" (as produced by YoutubeVideo::formatTimeStamp).
+    auto parts = split(rawDuration, ':');
+    if (parts.size() != 3)
+        return rawDuration;
+
+    auto secParts = split(parts[2], '.');
+    const std::string& hours = parts[0];
+    const std::string& minutes = parts[1];
+    const std::string& seconds = secParts.empty() ? parts[2] : secParts[0];
+
+    if (hours == "00")
+        return minutes + ":" + seconds;
+
+    std::string trimmedHours = hours;
+    if (trimmedHours.size() > 1 && trimmedHours[0] == '0')
+        trimmedHours = trimmedHours.substr(1);
+
+    return trimmedHours + ":" + minutes + ":" + seconds;
 }

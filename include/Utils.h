@@ -24,7 +24,6 @@
 #pragma once
 
 #include <string>
-#include <string_view>
 #include <vector>
 
 #include <iomanip>
@@ -44,12 +43,6 @@ public:
 
     static std::string makeFirstLetterUppercase(const std::string& s);
 
-    static int getCountOfSlashOccurrences(std::string_view s);
-    static std::vector<fs::path> listAllFilesInDir(const fs::path& dir);
-
-    static std::string createDoubleDotSlash(int times);
-
-    static void copyFile(const fs::path& src, const fs::path& dstDir);
     static void writeTextToFile(const std::string& text, const fs::path& file);
 
     static std::string readTextFromFile(const fs::path& file);
@@ -66,6 +59,9 @@ public:
 
     static std::vector<std::string> split(const std::string&, char delimiter);
 
-private:
-    static void listAllFilesInDirRec(const fs::path& dir, std::vector<fs::path>& files);
+    // Escapes text for safe insertion into HTML element content or attribute values.
+    static std::string escapeHtml(const std::string& s);
+
+    // Formats a "hh:mm:ss.xx" duration string for compact display, e.g. "01:02:04.31" -> "1:02:04".
+    static std::string formatDurationShort(const std::string& rawDuration);
 };

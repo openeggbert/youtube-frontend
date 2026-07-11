@@ -79,50 +79,54 @@ YoutubeVideo::YoutubeVideo(
             }
         }
 
-        id = props["id"];
-        if (!argVideo.empty() && id != argVideo)
-            return;
-
-        snapshot = props["snapshot"];
-        title = props["title"];
-        videoFileName = props["videoFileName"];
-        videoFileSizeInBytes = std::stoll(props["videoFileSizeInBytes"]);
-        videoFileSha512HashSum = props["videoFileSha512HashSum"];
-        videoDuration = props["videoDuration"];
-        channelName = props["channelName"];
-        channelUrl = props["channelUrl"];
-        channelId = props["channelId"];
-        uploadDate = props["uploadDate"];
-        timestamp = std::stoll(props["timestamp"]);
-        description = props["description"];
-        thumbnail = props["thumbnail"];
-        miniThumbnail = props["miniThumbnail"];
-
-        // Comments JSON
-        comments.clear();
-        if (props.count("comments"))
+        // A missing/corrupt or outdated-format cache file must not crash the
+        // whole run: fall through to CASE 2 and regenerate it instead.
+        try
         {
-            try
+            id = props.at("id");
+            if (!argVideo.empty() && id != argVideo)
+                return;
+
+            snapshot = props["snapshot"];
+            title = props["title"];
+            videoFileName = props["videoFileName"];
+            videoFileSizeInBytes = props.count("videoFileSizeInBytes")
+                                       ? std::stoll(props["videoFileSizeInBytes"]) : 0;
+            videoFileSha512HashSum = props["videoFileSha512HashSum"];
+            videoDuration = props["videoDuration"];
+            channelName = props["channelName"];
+            channelUrl = props["channelUrl"];
+            channelId = props["channelId"];
+            uploadDate = props["uploadDate"];
+            timestamp = props.count("timestamp") ? std::stoll(props["timestamp"]) : 0;
+            description = props["description"];
+            thumbnail = props["thumbnail"];
+            miniThumbnail = props["miniThumbnail"];
+
+            // Comments JSON
+            comments.clear();
+            if (props.count("comments"))
             {
                 json arr = json::parse(props["comments"]);
                 for (auto& elem : arr)
                 {
-                    YoutubeComment yc(elem);
-                    comments.push_back(yc);
+                    comments.emplace_back(elem);
                 }
             }
-            catch (...)
-            {
-                throw std::runtime_error("Error parsing comments JSON");
-            }
+
+            previousVideoId = props.count("previousVideoId") ? props["previousVideoId"] : "";
+            nextVideoId = props.count("nextVideoId") ? props["nextVideoId"] : "";
+            ext = props["ext"];
+            number = props.count("number") ? std::stoi(props["number"]) : 0;
+
+            return;
         }
-
-        previousVideoId = props.count("previousVideoId") ? props["previousVideoId"] : "";
-        nextVideoId = props.count("nextVideoId") ? props["nextVideoId"] : "";
-        ext = props["ext"];
-        number = std::stoi(props["number"]);
-
-        return;
+        catch (const std::exception& ex)
+        {
+            std::cerr << "[Warning] Corrupt metadata cache in " << metadataFile.string()
+                      << ", regenerating it: " << ex.what() << "\n";
+            // fall through to CASE 2 below
+        }
     }
 
     // ----------- CASE 2: Parse mediaDirectory JSON + video info ----------
@@ -160,6 +164,8 @@ YoutubeVideo::YoutubeVideo(
             break;
         }
     }
+    if (miniThumbnail.empty())
+        miniThumbnail = thumbnail; // no thumbnail met the width threshold: fall back to the main one
 
     fs::path thumbnailFile = mediaDirectory / ("thumbnail." + getThumbnailFormat());
     fs::path miniThumbnailFile = mediaDirectory / ("mini-thumbnail." + getMiniThumbnailFormat());

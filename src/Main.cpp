@@ -91,9 +91,9 @@ int main(int argc, char** argv) {
 
     if (args.size() < 1) {
         std::string argsS =
-            "/rv/big/foreign-blupi-videos-on-youtube --video_ 5rGd2VQz3mo --always-generate-metadata 0"
-            " --always-generate-html-files 1 --videos-per-row 4 --thumbnail-links-to-youtube 0"
-            " --thumbnail-as-base64 0"
+            "/rv/big/foreign-blupi-videos-on-youtube --video_ 5rGd2VQz3mo --always-generate-metadata 1"
+            " --always-generate-html-files 1 --videos-per-row 4 --thumbnail-links-to-youtube 1"
+            " --thumbnail-as-base64 1"
             " --channel_ UCqBpgfXap7cZOYkAC34u8Lg";
 
         std::stringstream ss(argsS);

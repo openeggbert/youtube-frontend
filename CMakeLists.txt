@@ -18,6 +18,8 @@ add_executable(youtube_frontend
         src/Utils.cpp
         src/YoutubeVideoHtml.cpp
         src/AssetsStyle.cpp
+        src/AssetsScript.cpp
+        src/PageShell.cpp
 )
 
 target_include_directories(youtube_frontend PUBLIC

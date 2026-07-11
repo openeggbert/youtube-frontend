@@ -23,6 +23,7 @@
 
 #include "YoutubeVideoHtml.h"
 #include "Utils.h"
+#include "PageShell.h"
 #include <algorithm>
 #include <cctype>
 #include <sstream>
@@ -136,23 +137,8 @@ YoutubeVideoHtml::YoutubeVideoHtml(
     const std::string titleEsc = Utils::escapeHtml(youtubeVideo.title);
     const std::string finalUrl = "https://www.youtube.com/watch?v=" + youtubeVideo.id;
 
-    html << R"(<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="icon" type="image/x-icon" href="../favicon.ico" sizes="16x16">
-<link rel="stylesheet" href="../assets/style.css">
-<title>)"
-         << titleEsc
-         << R"(</title>
-</head>
-<body>
-<header class="site-header"><div class="inner">
-<a class="brand" href="../videos.html"><span class="dot"></span>Youtube archive</a>
-</div></header>
-<main class="page">
-<p class="crumb"><a href="../videos.html">← all videos</a></p>
+    html << pageShellOpen("../", titleEsc);
+    html << R"(<p class="crumb"><a href="../videos.html">← all videos</a></p>
 <div class="video-page">
 <div>
 )";
@@ -275,14 +261,22 @@ YoutubeVideoHtml::YoutubeVideoHtml(
     if (youtubeVideo.videoFileName.ends_with(".mkv")) {
         std::string vEsc = escapeForShell(youtubeVideo.videoFileName);
         std::string vWebm = vEsc.substr(0, vEsc.size() - 3) + "webm";
+        std::string mediaDir = (archiveBoxArchiveDirectory / youtubeVideo.snapshot / "media").string();
 
         std::ostringstream cmd;
-        cmd << "cd " << (archiveBoxArchiveDirectory / youtubeVideo.snapshot / "media").string()
-            << " && ffmpeg -i " << vEsc << " -preset slow -crf 18 " << vWebm;
+        cmd << "cd " << mediaDir << " && ffmpeg -i " << vEsc << " -preset slow -crf 18 " << vWebm;
 
         html << "<div class=\"box cmd-box\"><h2>Convert to WebM</h2>"
              << "<input type=\"text\" class=\"cmd-input\" readonly value=\""
              << Utils::escapeHtml(cmd.str()) << "\"></div>\n";
+
+        std::ostringstream cmd480p;
+        cmd480p << "cd " << mediaDir << " && ffmpeg -i " << vEsc
+                << " -preset slow -crf 18 -vf scale=-1:480 " << vWebm;
+
+        html << "<div class=\"box cmd-box\"><h2>Convert to WebM (480p)</h2>"
+             << "<input type=\"text\" class=\"cmd-input\" readonly value=\""
+             << Utils::escapeHtml(cmd480p.str()) << "\"></div>\n";
     } else {
         html << "<div class=\"box cmd-box\"><h2>File location</h2>"
              << "<input type=\"text\" class=\"cmd-input\" readonly value=\""

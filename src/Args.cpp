@@ -72,6 +72,16 @@ Args::Args(const std::vector<std::string>& args)
                 }
             }
 
+            if (found.value() == ArgType::VIDEOS_PER_PAGE)
+            {
+                int intVal = std::atoi(value.c_str());
+                if (intVal < 1)
+                {
+                    // Invalid page size: ignore it and fall back to the default.
+                    continue;
+                }
+            }
+
             map.emplace(found.value(), Arg(found.value(), value));
         }
         else if (arg.rfind(TWO_DASHES, 0) == 0)

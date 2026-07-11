@@ -24,6 +24,7 @@
 #include "YoutubeVideo.h"
 #include "Utils.h"
 #include "YoutubedlFrontendException.h"
+#include "ThreadPool.h"
 #include <nlohmann/json.hpp>
 
 #include <fstream>
@@ -385,66 +386,6 @@ bool YoutubeVideo::operator<(const YoutubeVideo& o) const
 
     return false;
 }
-
-#include <future>
-#include <queue>
-#include <condition_variable>
-#include <mutex>
-
-class ThreadPool {
-    std::vector<std::thread> workers;
-    std::queue<std::function<void()>> tasks;
-
-    std::mutex queueMutex;
-    std::condition_variable condition;
-    bool stop = false;
-
-public:
-    explicit ThreadPool(size_t threads) {
-        for (size_t i = 0; i < threads; ++i) {
-            workers.emplace_back([this] {
-                for (;;) {
-                    std::function<void()> task;
-                    {
-                        std::unique_lock<std::mutex> lock(this->queueMutex);
-                        this->condition.wait(lock, [this] {
-                            return this->stop || !this->tasks.empty();
-                        });
-                        if (this->stop && this->tasks.empty())
-                            return;
-                        task = std::move(this->tasks.front());
-                        this->tasks.pop();
-                    }
-                    task();
-                }
-            });
-        }
-    }
-
-    template<class F>
-    auto enqueue(F f) -> std::future<decltype(f())> {
-        auto taskPtr =
-            std::make_shared<std::packaged_task<decltype(f())()>>(std::move(f));
-        std::future<decltype(f())> res = taskPtr->get_future();
-        {
-            std::lock_guard<std::mutex> lock(queueMutex);
-            tasks.emplace([taskPtr] { (*taskPtr)(); });
-        }
-        condition.notify_one();
-        return res;
-    }
-
-    ~ThreadPool() {
-        {
-            std::lock_guard<std::mutex> lock(queueMutex);
-            stop = true;
-        }
-        condition.notify_all();
-        for (auto &t : workers)
-            t.join();
-    }
-};
-
 
 std::vector<YoutubeVideo> YoutubeVideo::loadYoutubeVideos(
     const fs::path& archiveBoxArchiveDirectory,

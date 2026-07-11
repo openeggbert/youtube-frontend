@@ -31,6 +31,7 @@ enum class ArgType
     VIDEO,
     CHANNEL,
     VIDEOS_PER_ROW,
+    VIDEOS_PER_PAGE,
     ALWAYS_GENERATE_METADATA,
     ALWAYS_GENERATE_HTML_FILES,
     THUMBNAIL_AS_BASE64,
@@ -44,12 +45,13 @@ struct ArgInfo
     const char* description;
 };
 
-static constexpr std::array<ArgInfo, 7> ARG_INFOS{
+static constexpr std::array<ArgInfo, 8> ARG_INFOS{
     {
         {"video", "", "Only process the video with this YouTube video id"},
         {"channel", "", "Only process videos from this YouTube channel id"},
         {"videos-per-row", "4", "Soft column cap for the video grid width"},
-        {"always-generate-metadata", "true", "Always rebuild the cached metadata file (0/1)"},
+        {"videos-per-page", "60", "Max videos per channel page before paginating"},
+        {"always-generate-metadata", "true", "Always rebuild the cached metadata file and thumbnail cache (0/1)"},
         {"always-generate-html-files", "true", "Always rebuild the per-video HTML pages (0/1)"},
         {"thumbnail-as-base64", "false", "Embed thumbnails as base64 data URIs (0/1)"},
         {"thumbnail-links-to-youtube", "false", "Link thumbnails to YouTube instead of the local video page (0/1)"}

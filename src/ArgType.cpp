@@ -29,6 +29,7 @@ const std::vector<ArgType>& get_arg_type_values()
         ArgType::VIDEO,
         ArgType::CHANNEL,
         ArgType::VIDEOS_PER_ROW,
+        ArgType::VIDEOS_PER_PAGE,
         ArgType::ALWAYS_GENERATE_METADATA,
         ArgType::ALWAYS_GENERATE_HTML_FILES,
         ArgType::THUMBNAIL_AS_BASE64,

@@ -419,7 +419,6 @@ std::vector<YoutubeVideo> YoutubeVideo::loadYoutubeVideos(
     videos.reserve(futures.size());
 
     int index = 0;
-    size_t archiveCount = futures.size();
 
     for (auto &f : futures) {
         YoutubeVideo v = f.get();

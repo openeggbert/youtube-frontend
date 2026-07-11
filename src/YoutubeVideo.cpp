@@ -42,6 +42,8 @@ namespace fs = std::filesystem;
 
 std::vector<std::string> YoutubeVideo::missingYoutubeVideos;
 long YoutubeVideo::totalDurationInMilliseconds = 0;
+const std::string YoutubeVideo::UNCATEGORIZED_CHANNEL_NAME = "Unknown channel";
+const std::string YoutubeVideo::UNCATEGORIZED_CHANNEL_ID = "uncategorized";
 
 YoutubeVideo::YoutubeVideo()
     : videoFileSizeInBytes(0),
@@ -499,6 +501,14 @@ std::vector<YoutubeVideo> YoutubeVideo::loadYoutubeVideos(
         std::cout << "getVideoDurationInMilliseconds = " << v.getVideoDurationInMilliseconds() << "\n";
 
         totalDurationInMilliseconds += v.getVideoDurationInMilliseconds();
+
+        // Videos with no channel metadata would otherwise never appear in
+        // channelUrls/channels in Main.cpp and their video page would never
+        // be generated at all. Group them under a shared bucket instead.
+        if (v.channelName.empty()) {
+            v.channelName = UNCATEGORIZED_CHANNEL_NAME;
+            v.channelUrl.clear();
+        }
 
         videos.push_back(std::move(v));
     }

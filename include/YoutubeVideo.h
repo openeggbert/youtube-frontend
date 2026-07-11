@@ -61,6 +61,11 @@ public:
     static std::vector<std::string> missingYoutubeVideos;
     static long totalDurationInMilliseconds;
 
+    // Videos loaded with no channel metadata are grouped under this shared
+    // channel name/id instead of being silently excluded from the whole site.
+    static const std::string UNCATEGORIZED_CHANNEL_NAME;
+    static const std::string UNCATEGORIZED_CHANNEL_ID;
+
 public:
     YoutubeVideo();
 

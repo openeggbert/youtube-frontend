@@ -22,6 +22,8 @@
  */
 
 #include "YoutubeComment.h"
+#include <iostream>
+#include <unordered_set>
 
 YoutubeComment::YoutubeComment()
     : timestamp(0)
@@ -71,6 +73,30 @@ std::vector<YoutubeComment> YoutubeComment::sort(const std::vector<YoutubeCommen
 
     // Sort roots by timestamp
     std::sort(root.begin(), root.end());
+
+    // A comment whose parent is missing from the data (e.g. the parent was
+    // deleted) is unreachable from "root" and would otherwise be silently
+    // dropped. Surface it as a top-level comment instead of losing it.
+    if (root.size() != list.size())
+    {
+        std::unordered_set<std::string> reachableIds;
+        reachableIds.reserve(root.size());
+        for (auto& c : root)
+            reachableIds.insert(c.id);
+
+        std::vector<YoutubeComment> orphans;
+        for (auto& c : list)
+        {
+            if (!reachableIds.contains(c.id))
+                orphans.push_back(c);
+        }
+        std::sort(orphans.begin(), orphans.end());
+
+        std::cerr << "[Warning] " << orphans.size()
+                  << " comment(s) reference a missing parent; showing them as top-level comments\n";
+
+        root.insert(root.end(), orphans.begin(), orphans.end());
+    }
 
     return root;
 }

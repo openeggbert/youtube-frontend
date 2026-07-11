@@ -42,6 +42,7 @@
 #include "Utils.h"
 #include "Constants.h"
 #include "AssetsStyle.h"
+#include "YoutubedlFrontendException.h"
 
 namespace fs = std::filesystem;
 
@@ -51,6 +52,7 @@ static std::string createChannelHtml(
     const std::vector<std::string>& channels,
     const Args& argsInstance,
     const std::map<std::string, std::string>& channelUrls,
+    const std::map<std::string, std::string>& channelIds,
     std::vector<YoutubeVideo>& youtubeVideos,
     const fs::path& archiveBoxRootDirectory,
     const fs::path& videosDirectory,
@@ -88,27 +90,46 @@ static std::string mimeTypeForImageFormat(const std::string& format) {
     return "image/jpeg";
 }
 
+static void printUsage() {
+    std::cout << "youtube-frontend - static HTML generator for a yt-dlp/ArchiveBox video archive\n\n";
+    std::cout << "Usage:\n";
+    std::cout << "  youtube_frontend <archive-root-directory> [options]\n\n";
+    std::cout << "Options:\n";
+    for (auto type : get_arg_type_values()) {
+        std::ostringstream flag;
+        flag << "--" << get_name(type);
+        std::cout << "  " << std::left << std::setw(30) << flag.str() << get_description(type);
+        std::string def = get_default_value(type);
+        if (!def.empty())
+            std::cout << " (default: " << def << ")";
+        std::cout << "\n";
+    }
+    std::cout << "  " << std::left << std::setw(30) << "-h, --help" << "Show this help and exit\n";
+    std::cout << "\nExample:\n";
+    std::cout << "  youtube_frontend /path/to/archivebox --videos-per-row 3 --thumbnail-as-base64 1\n";
+}
+
 // ------------------- MAIN -----------------------
 int main(int argc, char** argv) {
-    std::cout << "youtube-frontend - HTML generator\n\n";
-
     std::vector<std::string> args;
     for (int i = 1; i < argc; ++i)
         args.push_back(argv[i]);
 
-    if (args.size() < 1) {
-        std::string argsS =
-            "/rv/big/foreign-blupi-videos-on-youtube --video_ 5rGd2VQz3mo --always-generate-metadata 1"
-            " --always-generate-html-files 1 --videos-per-row 4 --thumbnail-links-to-youtube 0"
-            " --thumbnail-as-base64 0"
-            " --channel_ UCqBpgfXap7cZOYkAC34u8Lg";
-
-        std::stringstream ss(argsS);
-        std::string token;
-        args.clear();
-        while (ss >> token)
-            args.push_back(token);
+    for (const auto& a : args) {
+        if (a == "-h" || a == "--help") {
+            printUsage();
+            return 0;
+        }
     }
+
+    if (args.empty()) {
+        printUsage();
+        return 1;
+    }
+
+    std::cout << "youtube-frontend - HTML generator\n\n";
+
+    try {
 
     Args argsInstance(args);
     std::cout << argsInstance.to_string() << "\n";
@@ -126,15 +147,30 @@ int main(int argc, char** argv) {
         YoutubeVideo::loadYoutubeVideos(archiveBoxArchiveDirectory, argsInstance);
 
     std::map<std::string, std::string> channelUrls;
+    std::map<std::string, std::string> channelIds;
     std::vector<std::string> channels;
 
-    // Build channel name → channel URL map and list of unique channels
+    // Build channel name → channel URL/id maps and the list of unique channels.
+    // Videos with no channel metadata were already grouped under
+    // YoutubeVideo::UNCATEGORIZED_CHANNEL_NAME by loadYoutubeVideos.
     for (auto& v : youtubeVideos) {
         const std::string& channelName = v.channelName;
-        if (!channelName.empty() && !channelUrls.contains(channelName)) {
-            channelUrls[channelName] = v.channelUrl;
-            channels.push_back(channelName);
+        if (channelName.empty() || channelUrls.contains(channelName))
+            continue;
+
+        channelUrls[channelName] = v.channelUrl;
+
+        if (channelName == YoutubeVideo::UNCATEGORIZED_CHANNEL_NAME) {
+            channelIds[channelName] = YoutubeVideo::UNCATEGORIZED_CHANNEL_ID;
+        } else {
+            const std::string needle = "/channel/";
+            auto pos = v.channelUrl.find(needle);
+            channelIds[channelName] = (pos == std::string::npos)
+                                          ? channelName
+                                          : v.channelUrl.substr(pos + needle.size());
         }
+
+        channels.push_back(channelName);
     }
 
     std::sort(channels.begin(), channels.end(),
@@ -167,6 +203,7 @@ int main(int argc, char** argv) {
             channels,
             argsInstance,
             channelUrls,
+            channelIds,
             youtubeVideos,
             archiveBoxRootDirectory,
             videosDirectory,
@@ -174,14 +211,7 @@ int main(int argc, char** argv) {
             processedVideos
         );
 
-        const std::string& url = channelUrls.at(c);
-        const std::string needle = "/channel/";
-        auto pos = url.find(needle);
-        std::string channelId = (pos == std::string::npos)
-                                ? c
-                                : url.substr(pos + needle.size());
-
-        Utils::writeTextToFile(html, channelsDirectory / (channelId + ".html"));
+        Utils::writeTextToFile(html, channelsDirectory / (channelIds.at(c) + ".html"));
     }
 
     // Generate master list (wantedChannelName = null)
@@ -191,6 +221,7 @@ int main(int argc, char** argv) {
             channels,
             argsInstance,
             channelUrls,
+            channelIds,
             youtubeVideos,
             archiveBoxRootDirectory,
             videosDirectory,
@@ -245,6 +276,11 @@ int main(int argc, char** argv) {
         }
     }
 
+    } catch (const std::exception& ex) {
+        std::cerr << "Error: " << ex.what() << "\n";
+        return 1;
+    }
+
     return 0;
 }
 
@@ -254,6 +290,7 @@ static std::string createChannelHtml(
     const std::vector<std::string>& channels,
     const Args& argsInstance,
     const std::map<std::string, std::string>& channelUrls,
+    const std::map<std::string, std::string>& channelIds,
     std::vector<YoutubeVideo>& youtubeVideos,
     const fs::path& archiveBoxRootDirectory,
     const fs::path& videosDirectory,
@@ -292,11 +329,7 @@ static std::string createChannelHtml(
             continue;
 
         const std::string& url = channelUrls.at(channel);
-        const std::string needle = "/channel/";
-        auto pos = url.find(needle);
-        std::string channelId = (pos == std::string::npos)
-                                ? channel
-                                : url.substr(pos + needle.size());
+        const std::string& channelId = channelIds.at(channel);
 
         long countOfVideosInChannel =
             std::count_if(youtubeVideos.begin(), youtubeVideos.end(),
@@ -310,7 +343,8 @@ static std::string createChannelHtml(
             << "<span class=\"count\">" << countOfVideosInChannel << " videos</span></div>";
         out << "<div class=\"channel-links\">";
         out << "<a class=\"pill\" href=\"" << basePrefix << "channels/" << channelId << ".html\">View videos</a>";
-        out << "<a class=\"pill ghost\" target=\"_blank\" rel=\"noopener\" href=\"" << url << "\">Channel on YouTube ↗</a>";
+        if (!url.empty())
+            out << "<a class=\"pill ghost\" target=\"_blank\" rel=\"noopener\" href=\"" << url << "\">Channel on YouTube ↗</a>";
         out << "</div></div>\n";
 
         if (wantedChannelName) {

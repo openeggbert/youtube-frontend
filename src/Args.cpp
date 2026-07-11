@@ -74,6 +74,12 @@ Args::Args(const std::vector<std::string>& args)
 
             map.emplace(found.value(), Arg(found.value(), value));
         }
+        else if (arg.rfind(TWO_DASHES, 0) == 0)
+        {
+            throw YoutubedlFrontendException(
+                "Unknown option: " + arg + " (run with --help to see available options)"
+            );
+        }
     }
 }
 

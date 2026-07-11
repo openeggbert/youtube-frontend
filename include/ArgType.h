@@ -41,17 +41,18 @@ struct ArgInfo
 {
     const char* name;
     const char* defaultValue; // nullptr = no default
+    const char* description;
 };
 
 static constexpr std::array<ArgInfo, 7> ARG_INFOS{
     {
-        {"video", ""},
-        {"channel", ""},
-        {"videos-per-row", "4"},
-        {"always-generate-metadata", "true"},
-        {"always-generate-html-files", "true"},
-        {"thumbnail-as-base64", "false"},
-        {"thumbnail-links-to-youtube", "false"}
+        {"video", "", "Only process the video with this YouTube video id"},
+        {"channel", "", "Only process videos from this YouTube channel id"},
+        {"videos-per-row", "4", "Soft column cap for the video grid width"},
+        {"always-generate-metadata", "true", "Always rebuild the cached metadata file (0/1)"},
+        {"always-generate-html-files", "true", "Always rebuild the per-video HTML pages (0/1)"},
+        {"thumbnail-as-base64", "false", "Embed thumbnails as base64 data URIs (0/1)"},
+        {"thumbnail-links-to-youtube", "false", "Link thumbnails to YouTube instead of the local video page (0/1)"}
     }
 };
 
@@ -64,6 +65,11 @@ inline const char* get_name(ArgType type)
 inline const char* get_default_value(ArgType type)
 {
     return ARG_INFOS[static_cast<size_t>(type)].defaultValue;
+}
+
+inline const char* get_description(ArgType type)
+{
+    return ARG_INFOS[static_cast<size_t>(type)].description;
 }
 
 const std::vector<ArgType>& get_arg_type_values();

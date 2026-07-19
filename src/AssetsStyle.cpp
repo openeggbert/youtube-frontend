@@ -187,10 +187,9 @@ img { max-width: 100%; }
 }
 .channel-block-head {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
   margin-bottom: 20px;
 }
 .page-title {
@@ -199,6 +198,7 @@ img { max-width: 100%; }
   font-weight: 800;
   letter-spacing: -0.01em;
   text-wrap: balance;
+  color: #06C;
 }
 .head-meta {
   display: flex;
@@ -214,8 +214,9 @@ img { max-width: 100%; }
 }
 .channel-links {
   display: flex;
+  align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 /* ---------- pill buttons / links ---------- */

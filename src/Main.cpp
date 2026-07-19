@@ -148,8 +148,8 @@ static std::string buildThumbnailSrc(
 
     try {
         std::vector<uint8_t> bytes = Utils::resizeImage(filePath,
-                                                         25,
-                                                         static_cast<int>(9.0 / 16.0 * 25.0),
+                                                         THUMBNAIL_WIDTH,
+                                                         static_cast<int>(9.0 / 16.0 * THUMBNAIL_WIDTH),
                                                          youtubeVideo.getThumbnailFormat());
         if (bytes.empty())
             return basePrefix + thumbnailPath;
@@ -222,9 +222,22 @@ int main(int argc, char** argv) {
         }
     }
 
-    if (args.empty()) {
-        printUsage();
-        return 1;
+    // if (args.empty()) {
+    //     printUsage();
+    //     return 1;
+    // }
+
+    if (args.size() < 1) {
+        std::string argsS =
+            "/rv/big/foreign-blupi-videos-on-youtube --always-generate-metadata 0"
+            " --always-generate-html-files 0 --videos-per-row 4 --thumbnail-links-to-youtube 1"
+            " --thumbnail-as-base64 1";
+
+        std::stringstream ss(argsS);
+        std::string token;
+        args.clear();
+        while (ss >> token)
+            args.push_back(token);
     }
 
     std::cout << "youtube-frontend - HTML generator\n\n";

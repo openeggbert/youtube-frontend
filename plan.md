@@ -17,6 +17,7 @@ Scope: the whole C++ generator (`src/`, `include/`) + the generated HTML/CSS out
 > replies are now shown as top-level comments with a warning instead of
 > silently dropped. Verified with a synthetic fixture covering all four
 > cases.
+> 
 >
 > **Phase E2 implemented** (2026-07-11) — items E2.5–E2.7 below are done:
 > large channels now paginate across `channels/<id>[-page<N>].html` via a
